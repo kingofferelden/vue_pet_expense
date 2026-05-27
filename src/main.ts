@@ -4,17 +4,17 @@ import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 
-import Dashboard from './components/Dashboard.vue'
-import ExpenseList from './components/ExpenseList.vue'
-import ExpenseForm from './components/ExpenseForm.vue'
+import entryBoard from './components/entryBoard.vue'
+import expenseList from './components/expenseList.vue'
+import expenseForm from './components/expenseDetails.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', component: Dashboard },
-    { path: '/list', component: ExpenseList },
-    { path: '/add', component: ExpenseForm },
-    { path: '/edit/:id', component: ExpenseForm },
+    { path: '/', component: entryBoard },
+    { path: '/list', component: expenseList },
+    { path: '/add', component: expenseForm },
+    { path: '/edit/:id', component: expenseForm },
   ],
 })
 

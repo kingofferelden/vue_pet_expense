@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/multi-word-component-names -->
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -13,8 +12,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
-import { useExpenseStore } from '../stores/useExpenseStore'
-import { useChartData } from '../composables/useChartData'
+import { useExpenseStore } from '../stores/useExpenses'
+import { useChartData } from '../composables/useCharts'
 
 Chart.register(
   DoughnutController,
@@ -37,8 +36,8 @@ const barCanvas = ref<HTMLCanvasElement | null>(null)
 let donutChart: Chart<'doughnut'> | null = null
 let barChart: Chart<'bar'> | null = null
 
-function formatAmount(n: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
+function formatAmount(num: number) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num)
 }
 
 const budgetBarWidth = computed(() => Math.min(store.budgetPercent, 100).toFixed(1))
@@ -48,6 +47,11 @@ const budgetBarColor = computed(() => {
   if (store.budgetPercent >= 80) return '#f59e0b'
   return '#16a34a'
 })
+
+function reversedExpenses() {
+  return [...store.expenses].reverse().slice(0, 5)
+}
+
 onMounted(() => {
   if (donutCanvas.value) {
     donutChart = new Chart(donutCanvas.value, {
@@ -133,7 +137,7 @@ onUnmounted(() => {
     <div class="summary-grid">
       <div class="card">
         <span class="card-label">Total spent</span>
-        <span class="card-value">{{ formatAmount(store.totalSpent) }}</span>
+        <span class="card-value">{{ formatAmount(store.monthlyAmount) }}</span>
       </div>
       <div class="card">
         <span class="card-label">Budget remaining</span>
@@ -146,7 +150,7 @@ onUnmounted(() => {
       </div>
       <div class="card">
         <span class="card-label">Expenses logged</span>
-        <span class="card-value">{{ store.filteredExpenses.length }}</span>
+        <span class="card-value">{{ store.monthlyExpences.length }}</span>
       </div>
       <div class="card card-budget">
         <div class="budget-row">
@@ -190,11 +194,7 @@ onUnmounted(() => {
           <h2>Recent expenses</h2>
           <button class="btn-link" @click="router.push('/list')">View all →</button>
         </div>
-        <div
-          v-for="expense in [...store.expenses].reverse().slice(0, 5)"
-          :key="expense.id"
-          class="recent-row"
-        >
+        <div v-for="expense in reversedExpenses()" :key="expense.id" class="recent-row">
           <div>
             <p class="recent-desc">{{ expense.description }}</p>
             <p class="recent-date">{{ expense.date }}</p>

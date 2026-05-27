@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useExpenseStore } from '../stores/useExpenseStore'
+import { useExpenseStore } from '../stores/useExpenses'
 import type { Category } from '../types/expense'
+import { capitalize } from '@/utils/capitalize'
 
 const store = useExpenseStore()
 const route = useRoute()
@@ -87,8 +88,8 @@ function submit() {
     <div class="field">
       <label>Category</label>
       <select v-model="category">
-        <option v-for="cat in categories" :key="cat" :value="cat">
-          {{ cat.charAt(0).toUpperCase() + cat.slice(1) }}
+        <option v-for="category in categories" :key="category" :value="category">
+          {{ capitalize(category) }}
         </option>
       </select>
     </div>

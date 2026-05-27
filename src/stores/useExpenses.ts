@@ -11,22 +11,38 @@ export const useExpenseStore = defineStore(
     const filterCategory = ref<Category | 'all'>('all')
     const filterMonth = ref<string>('') // 'YYYY-MM'
 
-    const BUILTIN_CATEGORIES = ['food', 'transport', 'housing', 'entertainment', 'health', 'other']
-
-    const availableCategories = computed(() => {
-      const fromExpenses = expenses.value.map((e) => e.category)
-      return [...new Set([...BUILTIN_CATEGORIES, ...fromExpenses])]
-    })
+    const availableCategories = [
+      'food',
+      'transport',
+      'housing',
+      'entertainment',
+      'health',
+      'pet',
+      'other',
+    ]
 
     const filteredExpenses = computed(() => {
-      return expenses.value.filter((e) => {
-        const categoryMatch = filterCategory.value === 'all' || e.category === filterCategory.value
-        const monthMatch = !filterMonth.value || e.date.startsWith(filterMonth.value)
+      return expenses.value.filter((exp) => {
+        const categoryMatch =
+          filterCategory.value === 'all' || exp.category === filterCategory.value
+        const monthMatch = !filterMonth.value || exp.date.startsWith(filterMonth.value)
         return categoryMatch && monthMatch
       })
     })
 
-    const totalSpent = computed(() => filteredExpenses.value.reduce((sum, e) => sum + e.amount, 0))
+    const monthlyExpences = computed(() => {
+      return expenses.value.filter((exp) => {
+        return !filterMonth.value || exp.date.startsWith(filterMonth.value)
+      })
+    })
+
+    const monthlyAmount = computed(() => {
+      return monthlyExpences.value.reduce((sum, exp) => sum + exp.amount, 0)
+    })
+
+    const totalSpent = computed(() => {
+      return expenses.value.reduce((sum, exp) => sum + exp.amount, 0)
+    })
 
     const budgetRemaining = computed(() => budget.value - totalSpent.value)
     const budgetPercent = computed(() => Math.min((totalSpent.value / budget.value) * 100, 100))
@@ -49,6 +65,8 @@ export const useExpenseStore = defineStore(
       filterCategory,
       filterMonth,
       filteredExpenses,
+      monthlyExpences,
+      monthlyAmount,
       totalSpent,
       budgetRemaining,
       budgetPercent,
@@ -56,7 +74,6 @@ export const useExpenseStore = defineStore(
       removeExpense,
       updateBudget,
       availableCategories,
-      BUILTIN_CATEGORIES,
     }
   },
   {
