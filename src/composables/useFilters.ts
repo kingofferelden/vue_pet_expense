@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import { useExpenseStore } from '../stores/useExpenseStore'
+import { useExpenseStore } from '../stores/useExpenses'
 
 export function useFilters() {
   const store = useExpenseStore()

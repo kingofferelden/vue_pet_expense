@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useExpenseStore } from '../stores/useExpenseStore'
+import { useExpenseStore } from '../stores/useExpenses'
+import type { SortKey } from '../types/sort'
+import { capitalize } from '@/utils/capitalize'
 
 const store = useExpenseStore()
 const router = useRouter()
 
-const sortKey = ref<'date' | 'amount' | 'category'>('date')
-const sortDir = ref<'asc' | 'desc'>('desc')
-const confirmId = ref<string | null>(null) // which row is pending delete
+const sortKey = ref<SortKey>('date')
+const direction = ref<'asc' | 'desc'>('desc')
+const rowId = ref<string | null>(null) // which row is pending delete
 
 const categories = computed(() => store.availableCategories)
 
@@ -17,35 +19,37 @@ const sortedExpenses = computed(() => {
     const valA = a[sortKey.value]
     const valB = b[sortKey.value]
     if (sortKey.value === 'amount') {
-      return sortDir.value === 'asc'
+      return direction.value === 'asc'
         ? (valA as number) - (valB as number)
         : (valB as number) - (valA as number)
     }
-    return sortDir.value === 'asc'
+    return direction.value === 'asc'
       ? String(valA).localeCompare(String(valB))
       : String(valB).localeCompare(String(valA))
   })
 })
 
-const totalVisible = computed(() => sortedExpenses.value.reduce((sum, e) => sum + e.amount, 0))
+const totalVisible = computed(() =>
+  sortedExpenses.value.reduce((acc, expense) => acc + expense.amount, 0),
+)
 
-function toggleSort(key: typeof sortKey.value) {
+function toggleSort(key: SortKey) {
   if (sortKey.value === key) {
-    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+    direction.value = direction.value === 'asc' ? 'desc' : 'asc'
   } else {
     sortKey.value = key
-    sortDir.value = 'desc'
+    direction.value = 'desc'
   }
 }
 
 function confirmDelete(id: string) {
-  confirmId.value = id
+  rowId.value = id
 }
 
 function doDelete() {
-  if (confirmId.value) {
-    store.removeExpense(confirmId.value)
-    confirmId.value = null
+  if (rowId.value) {
+    store.removeExpense(rowId.value)
+    rowId.value = null
   }
 }
 
@@ -69,12 +73,12 @@ const categoryText: Record<string, string> = {
   other: '#475569',
 }
 
-function formatAmount(n: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
+function formatAmount(amount: number) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', {
+function formatDate(isoDate: string) {
+  return new Date(isoDate).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -93,8 +97,8 @@ function formatDate(iso: string) {
       <div class="filter-group">
         <label>Category</label>
         <select v-model="store.filterCategory">
-          <option v-for="cat in categories" :key="cat" :value="cat">
-            {{ cat === 'all' ? 'All categories' : cat.charAt(0).toUpperCase() + cat.slice(1) }}
+          <option v-for="category in categories" :key="category" :value="category">
+            {{ category === 'all' ? 'All categories' : capitalize(category) }}
           </option>
         </select>
       </div>
@@ -114,12 +118,11 @@ function formatDate(iso: string) {
     </div>
 
     <div v-if="sortedExpenses.length === 0" class="empty">
-      <p>No expenses found.</p>
+      <p>No expenses found</p>
       <button class="btn-primary" @click="router.push('/add')">Add your first expense</button>
     </div>
 
     <template v-else>
-      <!-- ── Table ──────────────────────────────────────────────────────── -->
       <div class="table-wrap">
         <table>
           <thead>
@@ -127,20 +130,20 @@ function formatDate(iso: string) {
               <th @click="toggleSort('date')" :class="{ sorted: sortKey === 'date' }">
                 Date
                 <span class="sort-icon">{{
-                  sortKey === 'date' ? (sortDir === 'asc' ? '↑' : '↓') : '↕'
+                  sortKey === 'date' ? (direction === 'asc' ? '↑' : '↓') : '↕'
                 }}</span>
               </th>
               <th>Description</th>
               <th @click="toggleSort('category')" :class="{ sorted: sortKey === 'category' }">
                 Category
                 <span class="sort-icon">{{
-                  sortKey === 'category' ? (sortDir === 'asc' ? '↑' : '↓') : '↕'
+                  sortKey === 'category' ? (direction === 'asc' ? '↑' : '↓') : '↕'
                 }}</span>
               </th>
               <th @click="toggleSort('amount')" :class="{ sorted: sortKey === 'amount' }">
                 Amount
                 <span class="sort-icon">{{
-                  sortKey === 'amount' ? (sortDir === 'asc' ? '↑' : '↓') : '↓'
+                  sortKey === 'amount' ? (direction === 'asc' ? '↑' : '↓') : '↓'
                 }}</span>
               </th>
               <th></th>
@@ -164,9 +167,9 @@ function formatDate(iso: string) {
               </td>
               <td class="td-amount">{{ formatAmount(expense.amount) }}</td>
               <td class="td-actions">
-                <template v-if="confirmId === expense.id">
+                <template v-if="rowId === expense.id">
                   <button class="btn-danger-sm" @click="doDelete">Delete</button>
-                  <button class="btn-ghost-sm" @click="confirmId = null">Cancel</button>
+                  <button class="btn-ghost-sm" @click="rowId = null">Cancel</button>
                 </template>
                 <template v-else>
                   <button class="btn-ghost-sm" @click="router.push(`/edit/${expense.id}`)">

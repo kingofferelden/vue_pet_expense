@@ -1,23 +1,24 @@
 import { computed } from 'vue'
-import { useExpenseStore } from '../stores/useExpenseStore'
+import { useExpenseStore } from '../stores/useExpenses'
+import { capitalize } from '@/utils/capitalize'
 
 export function useChartData() {
   const store = useExpenseStore()
 
-  const categoryLabels = ['food', 'transport', 'housing', 'entertainment', 'health', 'other']
+  const categoryLabels = ['food', 'transport', 'housing', 'entertainment', 'health', 'pet', 'other']
   const categoryColors = ['#166534', '#1e40af', '#854d0e', '#6b21a8', '#991b1b', '#475569']
-  const categoryBg = ['#dcfce7', '#dbeafe', '#fef9c3', '#fae8ff', '#fee2e2', '#f1f5f9']
+  const categoryBg = ['#dcfce7', '#dbeafe', '#fef9c3', '#fae8ff', '#fee2e2', '#f23df1', '#f1f5f9']
 
   const byCategory = computed(() => {
-    const totals: Record<string, number> = Object.fromEntries(categoryLabels.map((c) => [c, 0]))
-    store.filteredExpenses.forEach((e) => {
-      totals[e.category] = (totals[e.category] ?? 0) + e.amount
+    const totals: Record<string, number> = Object.fromEntries(categoryLabels.map((cat) => [cat, 0]))
+    store.monthlyExpences.forEach((exp) => {
+      totals[exp.category] = (totals[exp.category] ?? 0) + exp.amount
     })
     return {
-      labels: categoryLabels.map((c) => c.charAt(0).toUpperCase() + c.slice(1)),
+      labels: categoryLabels.map((cat) => capitalize(cat)),
       datasets: [
         {
-          data: categoryLabels.map((c) => totals[c]),
+          data: categoryLabels.map((cat) => totals[cat]),
           backgroundColor: categoryBg,
           borderColor: categoryColors,
           borderWidth: 1,
@@ -28,8 +29,8 @@ export function useChartData() {
 
   const byDay = computed(() => {
     const totals: Record<string, number> = {}
-    store.filteredExpenses.forEach((e) => {
-      totals[e.date] = (totals[e.date] ?? 0) + e.amount
+    store.monthlyExpences.forEach((exp) => {
+      totals[exp.date] = (totals[exp.date] ?? 0) + exp.amount
     })
     const sorted = Object.entries(totals).sort(([a], [b]) => a.localeCompare(b))
     return {

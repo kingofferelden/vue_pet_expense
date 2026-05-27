@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { Category } from '../types/expense'
 
+// as angular imports
 const props = withDefaults(
   defineProps<{
     category: Category
@@ -22,7 +23,7 @@ const builtinColors: Record<string, { bg: string; text: string }> = {
   other: { bg: '#f1f5f9', text: '#475569' },
 }
 
-function hashColor(str: string): { bg: string; text: string } {
+function computeColor(str: string): { bg: string; text: string } {
   let hash = 0
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash)
@@ -34,7 +35,7 @@ function hashColor(str: string): { bg: string; text: string } {
   }
 }
 
-const colors = computed(() => builtinColors[props.category] ?? hashColor(props.category))
+const colors = computed(() => builtinColors[props.category] ?? computeColor(props.category))
 
 const label = computed(() => props.category.charAt(0).toUpperCase() + props.category.slice(1))
 </script>
